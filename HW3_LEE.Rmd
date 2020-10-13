@@ -1,0 +1,102 @@
+---
+title: "HW3"
+author: "SUNNY LEE"
+date: "10/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Problem 1: COVID-19
+
+```{r}
+covid <- read.csv("covid.csv")
+```
+
+1. Correctly format the dates in "Date.of.birth", "First.day.of.symptoms", "Date.of.outcome" and "Date.of.diagnosis".
+
+```{r}
+covid$Date.of.birth <- as.Date(covid$Date.of.birth)
+covid$First.day.of.symptoms <- as.Date(covid$First.day.of.symptoms)
+covid$Date.of.outcome <- as.Date(covid$Date.of.outcome)
+covid$Date.of.diagnosis <- as.Date(covid$Date.of.diagnosis)
+```
+
+2. Format "Hospitalization.type", "Symptoms" and "Outcome" as factors and "Epidemiological.link…Notes" as character.
+
+```{r}
+covid$Hospitalization.type <- as.factor(covid$Hospitalization.type)
+covid$Symptoms <- as.factor(covid$Symptoms)
+covid$Outcome <- as.factor(covid$Outcome)
+covid$Epidemiological.link...Notes <- as.character(covid$Epidemiological.link...Notes)
+str(covid)
+```
+
+3. Create a three-dimensional table reporting the three factors from the previous question. Hint: use the function `table()` with the variables of interest.
+
+```{r}
+tbl <- table(covid$Hospitalization.type, covid$Outcome, covid$Symptoms)
+tbl
+```
+
+4. Using the table object created in the previous question, subset it in order to create the following table.
+
+```{r}
+tbl[1:2, 2:3, 1]
+```
+
+5. Order the data based on the date of diagnosis (from first to most recent).
+
+```{r}
+covid <- covid[order(covid$Date.of.diagnosis), ]
+head(covid)
+```
+
+6. Add a column that reports whether or not a case was asymptomatic AND in home isolation. Name the observation "Home_Asymptomatic" if the conditions apply and "Non_Home_Asymptomatic" if not and then produce a bar plot of this new variable.
+
+```{r}
+covid$Home_Asymptomatic <- ifelse(
+  covid$Symptoms == "Asymptomatic" & covid$Hospitalization.type == "Home isolation",
+  "Home_Asymptomatic", "Non_Home_Asymptomatic")
+barplot(table(covid$Home_Asymptomatic), ylab = "Number of cases")
+```
+
+7. Count the number of cases of people born after 1981 and that have healed.
+
+```{r}
+sum(covid$Date.of.birth >= "1981-01-01" & covid$Outcome == "Healed")
+```
+
+8. Count the number of cases that are asymptomatic OR in home isolation (but not both) AND were born before 1982.
+
+```{r}
+sum(xor(covid$Symptoms == "Asymptomatic", covid$Hospitalization.type == "Home isolation") &
+      covid$Date.of.birth < "1982-01-01", na.rm = TRUE)
+```
+
+9. Create a new dataset including only the rows where "Epidemiological.link…Notes" includes the words "contact" OR "symptom" (or both). Hint: you can use the `grep()` function and `tolower()`.
+
+```{r}
+ind <- grep("contact|symptom", tolower(covid$Epidemiological.link...Notes))
+covid2 <- covid[ind, ]
+```
+
+10. In the previous dataset add a column reporting the age (in years, therefore in integer format) of each patient as of October 2nd, 2020. Save this dataset into a .csv file and make it available on your GitHub repository for this assignment.
+
+```{r}
+age.in.days <- as.Date("2020-10-02") - covid2$Date.of.birth
+covid2$Age.in.years <- as.integer(age.in.days / 365.242199)
+write.csv(covid2, "covid2.csv", row.names = FALSE)
+```
+
+11. Produce a pie chart for the type of hospitalization for cases born between 1960 and 1980.
+
+```{r}
+covid3 <- covid[covid$Date.of.birth >= "1960-01-01" & covid$Date.of.birth <= "1980-12-31", ]
+pie(table(covid3$Hospitalization.type),
+    main = "Type of hospitalization for cases born between 1960 and 1980")
+```
+
