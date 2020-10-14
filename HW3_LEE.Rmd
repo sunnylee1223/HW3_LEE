@@ -100,3 +100,59 @@ pie(table(covid3$Hospitalization.type),
     main = "Type of hospitalization for cases born between 1960 and 1980")
 ```
 
+## Problem 2: Salary
+
+1. Load the data and check the formatting of the variables.
+
+```{r}
+adult <- read.csv("adult.csv")
+str(adult)
+```
+
+2. Rename the last column (currently called "NA") containing the dichotomous salary information. Assign the name `salary` to it.
+
+```{r}
+names(adult)[ncol(adult)] <- "salary"
+```
+
+3. The values in `salary` have a space in front of them (e.g. " >50K"): remove the space from all values (hint:you can use `substring()`).
+
+```{r}
+adult$salary <- substring(adult$salary, 2)
+```
+
+4. Again, in the variable `salary`, replace ">50K" with the value 1 and "<=50K" with 0. Make sure to format it as a factor with two levels.
+
+```{r}
+adult$salary <- ifelse(adult$salary == ">50K", 1, 0)
+adult$salary <- factor(adult$salary)
+```
+
+5. Use the `glm()` function to estimate this logistic model. Only specify the arguments `formula = salary ~ .`, `data` and `family = binomial`. Save the result of the estimation in an object called `fit`.
+
+```{r}
+fit <- glm(formula = salary ~ ., data = adult, family = binomial)
+```
+
+6. Using the information in `fit` (hint: you can use the functions `coef()` and `summary()` to extract information), create a dataframe collecting:
+
+1) The names of the variables (names of the rows of the dataframe);
+2) The value of the coefficients (first column);
+3) A logical vector stating which coefficients are positive (second column);
+4) The p-values (third column).
+
+```{r}
+df_fit <- data.frame(coefficient = summary(fit)$coefficients[, 1],
+                     positive = summary(fit)$coefficients[, 1] > 0,
+                     p_value = summary(fit)$coefficients[, 4])
+df_fit
+```
+
+7. Subset the dataframe created in the previous question to only show the rows where the p-values are strictly smaller than 0.05. Knowing that (i) the remaining rows are statistically significant and that (ii) positive coefficients contribute to increase the probability of a salary larger than $50,000 (the opposite for negative values), comment on those variables that negatively contribute to salary.
+
+```{r}
+df_fit[df_fit$p_value < 0.05, ]
+```
+
+Education "7th-8th"; marital status "Never-married"; occupation "Farming-fishing", "Handlers-cleaners", "Other-service", "Priv-house-serv"; relationship "Own-child" and native country "Columbia" and "South" negatively contribute to salary.
+
