@@ -156,3 +156,36 @@ df_fit[df_fit$p_value < 0.05, ]
 
 Education "7th-8th"; marital status "Never-married"; occupation "Farming-fishing", "Handlers-cleaners", "Other-service", "Priv-house-serv"; relationship "Own-child" and native country "Columbia" and "South" negatively contribute to salary.
 
+
+## Bonus Problem: Map
+
+```{r}
+library(maps)
+library(leaflet)
+df <- data.frame(Teams = c("Real Madrid", "FC Barcelona", "Atlético Madrid",
+                           "Athletic Bilbao", "Valencia"),
+                 Champions = c(34, 26, 10, 8, 6),
+                 City = c("Madrid", "Barcelona", "Madrid", "Bilbao", "Valencia"))
+# filter world.cities data frame to include only relevant columns and cities in Spain
+cities <- subset(world.cities, country.etc == "Spain", c(name, lat, long))
+# add columns with latitude longitude by merging with cities dataframe
+df <- merge(df, cities, by.x = "City", by.y = "name")
+# create variable with popup text
+popup <- paste0("<b>", df$Teams, "</b> <br>", df$Champions)
+# paste together popups for the same city
+popups_df <- aggregate(popup ~ City, data = df, paste0, collapse = "<br>")
+# merge popups to the original df
+df <- merge(df, popups_df, by = "City")
+
+df %>%
+  # create map
+  leaflet() %>%
+  addTiles() %>%
+  # add points
+  addCircleMarkers(~long, ~lat, radius = ~Champions) %>%
+  # add popups
+  addPopups(~long, ~lat, ~popup,
+            options = popupOptions(closeButton = FALSE, closeOnClick = FALSE))
+```
+
+
